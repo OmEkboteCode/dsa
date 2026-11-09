@@ -150,13 +150,56 @@ bool isArmstrong(int n) {
   return sum == n;
 }
 
+void binToDec(int binNum) {
+  int n = binNum;
+  int decNum = 0;
+  int power = 1; // 2^0 2^1
+  while (n > 0) {
+    int lastDig = n % 10;
+    decNum += lastDig * power;
+    power *= 2;
+    n = n / 10;
+  }
+  cout << decNum << endl;
+}
+
+void decToBin(int decNum) {
+  int n = decNum;
+  int pow = 1;
+  int binNum = 0;
+
+  while (n > 0) {
+    int rem = n % 2;
+    binNum += rem * pow;
+    n /= 2;
+    pow *= 10;
+  }
+  cout << "Binary of "<<decNum<<": "<<binNum << endl;
+}
+
+int strToDec(string bin){
+  int n = bin.length();
+  int power = 0;
+  int result = 0;
+
+  for(int i = n-1; i>=0; i--){
+    if(bin[i] == '1'){
+      result+= pow(2,power);
+    }
+    power++;
+  }
+  return result;
+}
+
 int main() {
-    int n;
-    cin >> n;
+  int a = 10;
+  int *ptr = &a;
+  float pi = 3.14;
+  float *ptr2 = &pi;
+  // cout<< &a<< " = "<< ptr<< endl;
+  // cout<< "Pi"<< ptr2;
 
-    cout << "Prime: " << (isPrime(n)? "Yes" : "No") << endl;
-    cout << "Palindrome: " << (isPalindrome(n) ? "Yes" : "No") << endl;
-    cout << "Armstrong: " << (isArmstrong(n) ? "Yes" : "No") << endl;
-
-    return 0;
+  cout << sizeof(ptr)<< endl;
+  cout << sizeof(ptr2)<< endl;
+  return 0;
 }
