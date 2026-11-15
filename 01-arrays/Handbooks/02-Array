@@ -1,0 +1,2520 @@
+# Major Topic 01: Arrays in C++
+
+## Module 2: Subarrays, Maximum Subarray Techniques & Array Optimisation
+
+
+
+Rebuilt handbook
+
+DSA foundation
+
+
+
+This version follows our updated learning system.
+
+One important distinction: we will explain the concepts taught in your lectures, but we will not assign the same lecture problems again in the handbook.
+
+Your Sigma lectures already give you the foundational implementations of printing subarrays, maximum subarray sum, Kadane's Algorithm, Buy and Sell Stocks, and Trapping Rainwater.
+
+The handbook will build on those foundations with new applications, variations and problem-solving patterns.
+
+# Part I: Module overview
+
+## 1. What you'll learn
+
+Your module introduces several important ideas in algorithm design:
+
+1. Contiguous ranges and subarray reasoning.
+2. Reusing previously calculated information.
+3. Maintaining useful state while traversing an array.
+4. Making decisions using information from previous elements.
+5. Prefix and suffix maximums.
+6. Two-pointer optimisation.
+7. Sliding-window techniques.
+8. Time-space trade-offs.
+9. Correctness reasoning and algorithmic invariants.
+
+These ideas will appear repeatedly throughout DSA.
+
+## 2. Lecture syllabus coverage
+
+| Sigma lecture                            | Handbook treatment                            |
+| ---------------------------------------- | --------------------------------------------- |
+| Print Subarrays                          | Conceptual foundation                         |
+| Maximum Subarray Sum: Brute Force        | Conceptual foundation                         |
+| Maximum Subarray Sum: Slightly Optimized | Repeated-work elimination                     |
+| Kadane's Algorithm                       | State and recurrence reasoning                |
+| Buy & Sell Stocks                        | Historical minimum tracking                   |
+| Buy & Sell Stocks (Code)                 | Code comprehension                            |
+| Trapping Rainwater                       | Boundary reasoning and precomputation         |
+| Trapping Rainwater (Code)                | Two-pointer reasoning                         |
+| Assignment Questions                     | Supplementary, distinct practice              |
+| Assignment Solutions                     | Complete solutions to our additional problems |
+
+The assignment PDFs aren't visible, so the supplementary problems below are original additions, not claimed reproductions of Sigma's assignments.
+
+## 3. The six concept-learning chunks
+
+01
+
+Subarrays and contiguous ranges
+
+Subarrays, subsequences, boundaries, range representation and counting.
+
+02
+
+Repeated calculations and running state
+
+Running sums, cumulative information and eliminating redundant work.
+
+03
+
+Kadane's Algorithm and state design
+
+Recurrences, local decisions, global answers and invariants.
+
+04
+
+Historical minimum and maximum tracking
+
+Prefix information, optimal decisions and chronological constraints.
+
+05
+
+Prefix and suffix precomputation
+
+Boundary information, independent arrays and space-time trade-offs.
+
+06
+
+Two pointers and sliding windows
+
+Search-space reduction, window invariants and efficient traversal.
+
+# Part II: Concept Learning
+
+## Chunk 1: Subarrays and Contiguous Ranges
+
+
+
+DSA foundation
+
+High priority
+
+
+
+### Learning prompt
+
+Explain what makes a subarray different from a subsequence, how a contiguous range can be represented using two indices, how to calculate the number of possible non-empty subarrays, and why the number of subarrays differs from the total work needed to process their elements. Connect this idea to range queries and other array algorithms.
+
+### Model answer
+
+What is a subarray?
+
+A subarray is a non-empty, contiguous portion of an array.
+
+Consider:
+
+```
+int arr[5] = {10, 20, 30, 40, 50};
+```
+
+Some valid subarrays are:
+
+```
+[10]
+[20, 30]
+[30, 40, 50]
+[10, 20, 30, 40]
+```
+
+But `[10, 30]` is not a subarray because it skips `20`.
+
+Subarray versus subsequence
+
+| Property          | Subarray  | Subsequence  |
+| ----------------- | --------- | ------------ |
+| Contiguous        | Yes       | Not required |
+| Relative order    | Preserved | Preserved    |
+| Can skip elements | No        | Yes          |
+| Example           | `[20,30]` | `[10,30,50]` |
+
+This distinction becomes particularly important when solving problems involving continuous ranges.
+
+Representing a subarray
+
+A subarray can be represented by two indices:
+
+- `start`: beginning of the range.
+- `end`: end of the range.
+
+For example:
+
+```
+Array: 10 20 30 40 50
+Index:  0  1  2  3  4
+```
+
+If:
+
+```
+start = 1;
+end = 3;
+```
+
+The selected range is:
+
+```
+20 30 40
+```
+
+Its length is:
+
+\\[ end-start+1 \\]
+
+In this case:
+
+\\[ 3-1+1=3 \\]
+
+How many non-empty subarrays exist?
+
+For an array of size \\(n\\), the number of possible non-empty subarrays is:
+
+\\[ 1+2+3+\cdots+n \\]
+
+Therefore:
+
+\\[ \boxed{\frac{n(n+1)}{2}} \\]
+
+For an array of size 5:
+
+\\[ \frac{5(6)}{2}=15 \\]
+
+Number of subarrays versus processing cost
+
+This is an important distinction.
+
+There are \\(O(n^2)\\) possible subarrays.
+
+However, printing every element of every subarray requires more work.
+
+The total number of elements printed is:
+
+\\[ \frac{n(n+1)(n+2)}{6} \\]
+
+Therefore, printing every subarray element takes:
+
+\\[ O(n^3) \\]
+
+This teaches us an important algorithm-analysis habit:
+
+Count the number of operations performed inside each iteration, not just the number of iterations.
+
+Why does this concept matter?
+
+Many array problems ask questions about a continuous range:
+
+- Does a range contain a particular sum?
+- What is the longest valid range?
+- What is the maximum or minimum value in a range?
+- How many ranges satisfy a condition?
+- Can we answer a range query efficiently?
+
+Subarray reasoning gives us the language to describe these problems precisely.
+
+### Hinglish explanation
+
+Subarray ka matlab hai array ka ek continuous portion.
+
+Example:
+
+```
+10 20 30 40 50
+```
+
+`[20, 30, 40]` valid subarray hai.
+
+Lekin `[10, 30]` valid subarray nahi hai, kyunki beech mein `20` skip ho gaya.
+
+Har subarray ko do indices se represent kar sakte hain:
+
+- `start`: beginning.
+- `end`: ending.
+
+Subarray ki length:
+
+\\[ end-start+1 \\]
+
+Total non-empty subarrays:
+
+\\[ \frac{n(n+1)}{2} \\]
+
+Ek important baat: subarrays ki count aur unke saare elements process karne ka total time alag ho sakta hai.
+
+### What → So What → Now What
+
+WHAT?
+
+A subarray is a continuous, non-empty range represented by starting and ending indices.
+
+SO WHAT?
+
+Understanding ranges helps us formulate problems involving sums, lengths, frequencies and continuous sequences.
+
+NOW WHAT?
+
+Learn to identify valid ranges, calculate their lengths, count them and reason about the work needed to process them.
+
+### Smart Notes
+
+- Subarray = contiguous, non-empty range.
+- Subsequence = elements in original order, with skipping permitted.
+- Range representation: `[start, end]`.
+- Range length: `end - start + 1`.
+- Number of non-empty subarrays:
+
+\\[ \frac{n(n+1)}{2} \\]
+
+- Number of subarrays: \\(O(n^2)\\).
+- Printing all their elements: \\(O(n^3)\\).
+
+### DSA connection
+
+Long-term value
+
+Subarrays lead naturally to prefix sums, sliding windows, range queries and dynamic programming.
+
+## Chunk 2: Repeated Calculations and Running State
+
+
+
+High priority
+
+Algorithm optimisation
+
+
+
+### Learning prompt
+
+Explain why repeatedly calculating information from the beginning can make an algorithm inefficient. Introduce running sums and cumulative information as techniques for reusing previous calculations. Demonstrate how a running total can be maintained while traversing an array, how this differs from recalculating a range sum, and why maintaining state can reduce complexity. Connect the idea to prefix sums and range-sum queries.
+
+### Model answer
+
+The problem of repeated work
+
+Imagine you have an array:
+
+```
+3 5 2 7 4
+```
+
+You want the sum of several ranges:
+
+```
+[0, 2] = 3 + 5 + 2 = 10
+[0, 3] = 3 + 5 + 2 + 7 = 17
+[0, 4] = 3 + 5 + 2 + 7 + 4 = 21
+```
+
+Notice something?
+
+We repeatedly calculate the same earlier elements.
+
+Instead of calculating everything again, we can maintain a cumulative sum.
+
+Running sum
+
+A running sum stores the accumulated total as we traverse the array.
+
+```
+int arr[5] = {3, 5, 2, 7, 4};
+
+int sum = 0;
+
+for (int i = 0; i < 5; i++) {
+    sum += arr[i];
+
+    cout << sum << " ";
+}
+```
+
+Output:
+
+```
+3 8 10 17 21
+```
+
+Each iteration adds only the newly encountered element.
+
+Understanding the state
+
+| Index | Current element | Running sum |
+| ----- | --------------- | ----------- |
+| 0     | 3               | 3           |
+| 1     | 5               | 8           |
+| 2     | 2               | 10          |
+| 3     | 7               | 17          |
+| 4     | 4               | 21          |
+
+The variable `sum` always represents the total of the elements processed so far.
+
+This is a useful invariant.
+
+Prefix sums
+
+We can store these cumulative sums in another array.
+
+```
+int arr[5] = {3, 5, 2, 7, 4};
+
+int prefix[5];
+
+prefix[0] = arr[0];
+
+for (int i = 1; i < 5; i++) {
+    prefix[i] = prefix[i - 1] + arr[i];
+}
+```
+
+The resulting prefix array is:
+
+```
+3 8 10 17 21
+```
+
+Now we can calculate a range sum efficiently.
+
+Suppose we need the sum from index `1` through index `3`.
+
+\\[ sum(1,3)=prefix[3]-prefix[0] \\]
+
+\\[ =17-3=14 \\]
+
+The range contains:
+
+```
+5 + 2 + 7 = 14
+```
+
+The general formula is:
+
+\\[ \boxed{ sum(l,r)=prefix[r]-(l>0?prefix[l-1]:0) } \\]
+
+This gives constant-time range-sum queries after preprocessing.
+
+Complete C++ implementation
+
+```
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    int arr[5] = {3, 5, 2, 7, 4};
+
+    int n = 5;
+
+    vector<int> prefix(n);
+
+    prefix[0] = arr[0];
+
+    for (int i = 1; i < n; i++) {
+        prefix[i] = prefix[i - 1] + arr[i];
+    }
+
+    int l = 1;
+    int r = 3;
+
+    int rangeSum = prefix[r];
+
+    if (l > 0) {
+        rangeSum -= prefix[l - 1];
+    }
+
+    cout << rangeSum;
+
+    return 0;
+}
+```
+
+Output:
+
+```
+14
+```
+
+Complexity
+
+| Operation           | Complexity |
+| ------------------- | ---------- |
+| Build prefix array  | \\(O(n)\\) |
+| One range-sum query | \\(O(1)\\) |
+| Store prefix array  | \\(O(n)\\) |
+
+If you perform many range queries, prefix sums can be much more efficient than recalculating each range from scratch.
+
+A useful distinction
+
+A running sum and a prefix sum are related, but not identical in implementation:
+
+- Running sum: maintain the accumulated value in a variable.
+- Prefix sum: store accumulated values at every index.
+
+### Hinglish explanation
+
+Repeated calculations ka matlab hai wahi information baar-baar calculate karna.
+
+Agar humein cumulative sum chahiye, toh har baar beginning se add karne ki zaroorat nahi hai.
+
+Hum previous sum ko maintain karke next element add kar sakte hain.
+
+Prefix sum mein hum har index tak ka cumulative total store karte hain.
+
+Isse kisi bhi range ka sum do prefix values ka difference lekar calculate kar sakte hain.
+
+### What → So What → Now What
+
+WHAT?
+
+Running state and prefix sums store information calculated from previously processed elements.
+
+SO WHAT?
+
+Reusing information can eliminate redundant calculations and make repeated range queries significantly faster.
+
+NOW WHAT?
+
+Practise building prefix arrays, answering range queries and identifying when storing extra information is worth the memory cost.
+
+### Smart Notes
+
+- Running sum maintains an accumulated total.
+- Prefix sum stores cumulative totals.
+- Prefix formula:
+
+\\[ prefix[i]=prefix[i-1]+arr[i] \\]
+
+\- Range sum:
+
+\\[ sum(l,r)=prefix[r]-prefix[l-1] \\]
+
+For `l = 0`, simply use `prefix[r]`.
+
+- Prefix construction: \\(O(n)\\).
+- Range query: \\(O(1)\\).
+- Auxiliary space: \\(O(n)\\).
+
+### DSA connection
+
+DSA foundation
+
+Prefix sums are widely used in range queries, frequency counting, subarray-sum problems, matrix algorithms and competitive programming.
+
+## Chunk 3: Kadane's Algorithm and State Design
+
+
+
+High priority
+
+Long-term value
+
+
+
+### Learning prompt
+
+Explain how an algorithm can maintain a compact state that contains everything necessary for its next decision. Use the maximum-subarray problem as the motivating example, derive the two possible choices at each position, explain the difference between local and global state, and discuss how a recurrence captures the algorithm's logic. Connect this reasoning to dynamic programming, invariants and correctness proofs.
+
+### Model answer
+
+What is algorithmic state?
+
+State is the information an algorithm remembers while it runs.
+
+Consider the following:
+
+```
+int currentSum = 0;
+int maxSum = 0;
+```
+
+These variables store information about the elements processed so far.
+
+A well-designed algorithm does not need to remember everything. It needs to remember the information necessary to make its next decision.
+
+This is called state design.
+
+Local state versus global state
+
+In Kadane's Algorithm:
+
+- `currentSum` is local state: the best subarray sum ending at the current position.
+- `maxSum` is global state: the best subarray sum found anywhere so far.
+
+These variables answer different questions.
+
+Deriving the recurrence
+
+At position `i`, the best subarray ending at that position must either:
+
+1. Start at `i`.
+2. Extend the best subarray ending at `i-1`.
+
+Therefore:
+
+\\[ currentSum_i=\max(arr[i],currentSum\_{i-1}+arr[i]) \\]
+
+Then update the global answer:
+
+\\[ maxSum_i=\max(maxSum\_{i-1},currentSum_i) \\]
+
+This is a recurrence relation.
+
+A recurrence describes how the current result depends on previously calculated results.
+
+Why is this related to dynamic programming?
+
+Dynamic programming often involves:
+
+1. Defining a state.
+2. Establishing a recurrence.
+3. Determining the order in which states are calculated.
+4. Reusing previous results.
+
+Kadane's Algorithm has these characteristics.
+
+It is an example of a space-optimised, one-dimensional dynamic-programming technique.
+
+What is an invariant?
+
+An invariant is a condition that remains true throughout an algorithm.
+
+For Kadane's Algorithm, an important invariant is:
+
+> After processing index `i`, `currentSum` equals the maximum sum of any non-empty subarray ending exactly at index `i`.
+
+The global invariant is:
+
+> `maxSum` equals the maximum sum of any non-empty subarray contained in the processed prefix.
+
+These statements explain what the variables mean at every stage.
+
+Why do invariants matter?
+
+They help us:
+
+- Understand the algorithm.
+- Identify incorrect updates.
+- Prove correctness.
+- Debug mistakes.
+- Explain why a solution works.
+
+A practical example of state design
+
+Suppose we want to find the maximum difference `arr[j] - arr[i]`, where `j > i`.
+
+We don't need to store every previous element.
+
+We only need the smallest earlier value.
+
+```
+int minValue = arr[0];
+int maxDifference = arr[1] - arr[0];
+
+for (int i = 1; i < n; i++) {
+    maxDifference = max(maxDifference, arr[i] - minValue);
+
+    minValue = min(minValue, arr[i]);
+}
+```
+
+Here:
+
+- `minValue` remembers the best candidate from the past.
+- `maxDifference` remembers the best result so far.
+
+This is the same style of reasoning used in stock profit calculations, but applied to a different problem.
+
+### Hinglish explanation
+
+State ka matlab hai algorithm ke paas currently kaunsi important information available hai.
+
+Ek achha algorithm har previous value ko remember nahi karta. Woh sirf wahi information store karta hai jo next decision ke liye zaroori hai.
+
+Kadane's Algorithm mein:
+
+- `currentSum` current position par ending best subarray ko represent karta hai.
+- `maxSum` ab tak ka overall best answer represent karta hai.
+
+Invariant ka matlab hai aisi condition jo algorithm ke execution ke dauran true rehti hai.
+
+Agar tumhe pata hai ki har variable kya represent karta hai, toh code ko samajhna aur debug karna bahut easier ho jata hai.
+
+### What → So What → Now What
+
+WHAT?
+
+Algorithmic state is the compact information maintained to make future decisions.
+
+SO WHAT?
+
+Good state design is often the difference between an inefficient algorithm and an efficient one. It also provides the foundation for dynamic programming and correctness reasoning.
+
+NOW WHAT?
+
+For every algorithm, identify its state variables, explain what each represents, write its recurrence where applicable and state an invariant.
+
+### Smart Notes
+
+- State = information maintained during execution.
+- Local state and global state may have different responsibilities.
+- A recurrence expresses how a new result depends on earlier results.
+- An invariant describes what remains true throughout execution.
+- Kadane's Algorithm uses local and global state.
+- Good state design can eliminate unnecessary memory and repeated calculations.
+
+### DSA connection
+
+Long-term value
+
+State design, recurrences and invariants are foundational ideas in dynamic programming, greedy algorithms, graph algorithms and mathematical proofs of correctness.
+
+## Chunk 4: Historical Minimum and Maximum Tracking
+
+
+
+High priority
+
+DSA foundation
+
+
+
+### Learning prompt
+
+Explain how an array traversal can maintain useful information about previously encountered elements to make decisions about the current element. Discuss prefix minimums and maximums, chronological constraints, and why the order of updating state matters. Demonstrate the technique through a new maximum-difference problem, analyse its complexity and connect it to stock trading and other one-pass algorithms.
+
+### Model answer
+
+The basic idea
+
+Imagine traversing:
+
+```
+8 3 6 2 9 4
+```
+
+At each position, we might need to know:
+
+- The smallest value encountered before it.
+- The largest value encountered before it.
+- The best result obtained so far.
+
+Instead of repeatedly examining all previous elements, we can maintain these values.
+
+This is called historical state tracking.
+
+Prefix minimum
+
+A prefix minimum stores the smallest element encountered from the beginning through the current position.
+
+For example:
+
+```
+Array:        8 3 6 2 9 4
+Prefix min:   8 3 3 2 2 2
+```
+
+The prefix minimum at index 4 is `2`, because the smallest value among the first five elements is `2`.
+
+Prefix maximum
+
+Similarly:
+
+```
+Array:        8 3 6 2 9 4
+Prefix max:   8 8 8 8 9 9
+```
+
+These arrays allow us to answer historical minimum and maximum questions efficiently.
+
+New application: Maximum difference with ordering
+
+Suppose we want to find the largest value of:
+
+\\[ arr[j]-arr[i] \\]
+
+subject to:
+
+\\[ j>i \\]
+
+This means we must choose the earlier element first and the later element second.
+
+Consider:
+
+```
+8 3 6 2 9 4
+```
+
+Possible useful choice:
+
+\\[ 9-2=7 \\]
+
+The answer is `7`.
+
+We can solve this in one traversal.
+
+Complete C++ solution
+
+```
+#include <iostream>
+#include <algorithm>
+using namespace std;
+
+int maxDifference(int arr[], int n) {
+    if (n < 2) {
+        return -1;
+    }
+
+    int minValue = arr[0];
+    int bestDifference = arr[1] - arr[0];
+
+    for (int i = 1; i < n; i++) {
+
+        bestDifference = max(bestDifference, arr[i] - minValue);
+
+        minValue = min(minValue, arr[i]);
+    }
+
+    return bestDifference;
+}
+
+int main() {
+    int arr[6] = {8, 3, 6, 2, 9, 4};
+
+    cout << maxDifference(arr, 6);
+
+    return 0;
+}
+```
+
+Output:
+
+```
+7
+```
+
+Why update the answer before updating the minimum?
+
+This is subtle and important.
+
+We must calculate:
+
+\\[ arr[i]-\text{minimum earlier value} \\]
+
+If we update the minimum first, we might accidentally use the current element as both the buying and selling value.
+
+That would violate the requirement that `j > i`.
+
+The order of state updates is part of algorithm correctness.
+
+Complexity
+
+- One traversal: \\(O(n)\\).
+- A constant number of variables: \\(O(1)\\) auxiliary space.
+
+### Hinglish explanation
+
+Historical tracking ka matlab hai previous elements se useful information maintain karna.
+
+Example: minimum value ab tak kya mili hai?
+
+Har naye element ke liye hum current result calculate kar sakte hain aur phir minimum update kar sakte hain.
+
+Update order important hai, kyunki current element ko previous element ke roop mein use nahi kar sakte agar problem mein pehle aur baad ka order required hai.
+
+### What → So What → Now What
+
+WHAT?
+
+Historical tracking maintains useful prefix information such as the smallest or largest value encountered so far.
+
+SO WHAT?
+
+It lets us answer chronological optimisation problems in one traversal rather than comparing every possible pair.
+
+NOW WHAT?
+
+Practise identifying what information from the past is necessary, when it should be updated and whether the current element is allowed to participate in its own historical state.
+
+### Smart Notes
+
+- Prefix minimum: smallest value from the beginning through index `i`.
+- Prefix maximum: largest value from the beginning through index `i`.
+- Historical tracking avoids repeated scans.
+- Update order can affect correctness.
+- One-pass historical tracking often takes \\(O(n)\\) time and \\(O(1)\\) auxiliary space.
+
+### DSA connection
+
+DSA foundation
+
+This pattern appears in stock problems, maximum difference, maximum profit, array comparisons and one-pass optimisation algorithms.
+
+## Chunk 5: Prefix and Suffix Precomputation
+
+
+
+High priority
+
+Long-term value
+
+
+
+### Learning prompt
+
+Explain how precomputing information from the left and right sides of an array can eliminate repeated searches. Discuss prefix and suffix maximums, how they are constructed, and how they are used in problems where an element's answer depends on both sides. Demonstrate a new application using the maximum product of all elements except the current index, and compare precomputation with repeated computation.
+
+### Model answer
+
+Prefix information
+
+A prefix is the portion of an array from the beginning through a particular index.
+
+Example:
+
+```
+Array: 2 4 3 5 6
+```
+
+A prefix maximum array stores the maximum encountered from the left.
+
+```
+Prefix max: 2 4 4 5 6
+```
+
+Suffix information
+
+A suffix is the portion from a particular index through the end.
+
+The suffix maximum array stores the maximum encountered from the right.
+
+```
+Suffix max: 6 6 6 6 6
+```
+
+These structures are useful whenever an answer depends on information from both sides of a position.
+
+New application: Product of array except self
+
+Given an array, calculate a new array where each output position contains the product of all elements except the element at that position.
+
+Example:
+
+```
+Input:  1 2 3 4
+Output: 24 12 8 6
+```
+
+Why?
+
+- Position 0: `2 × 3 × 4 = 24`.
+- Position 1: `1 × 3 × 4 = 12`.
+- Position 2: `1 × 2 × 4 = 8`.
+- Position 3: `1 × 2 × 3 = 6`.
+
+We can calculate this using prefix and suffix products.
+
+Approach
+
+For each index:
+
+\\[ answer[i]=prefixProduct[i]\times suffixProduct[i] \\]
+
+Here:
+
+- `prefixProduct[i]` is the product of elements before `i`.
+- `suffixProduct[i]` is the product of elements after `i`.
+
+We can calculate the prefix contribution in one traversal and multiply the suffix contribution while traversing backwards.
+
+Complete C++ solution
+
+```
+#include <iostream>
+#include <vector>
+using namespace std;
+
+vector<long long> productExceptSelf(vector<int>& arr) {
+    int n = arr.size();
+
+    vector<long long> answer(n, 1);
+
+    long long prefix = 1;
+
+    for (int i = 0; i < n; i++) {
+        answer[i] = prefix;
+        prefix *= arr[i];
+    }
+
+    long long suffix = 1;
+
+    for (int i = n - 1; i >= 0; i--) {
+        answer[i] *= suffix;
+        suffix *= arr[i];
+    }
+
+    return answer;
+}
+
+int main() {
+    vector<int> arr = {1, 2, 3, 4};
+
+    vector<long long> answer = productExceptSelf(arr);
+
+    for (long long value : answer) {
+        cout << value << " ";
+    }
+
+    return 0;
+}
+```
+
+Output:
+
+```
+24 12 8 6
+```
+
+Dry run
+
+First traversal:
+
+| Index | Prefix before current element | Stored answer |
+| ----- | ----------------------------- | ------------- |
+| 0     | 1                             | 1             |
+| 1     | 1                             | 1             |
+| 2     | 2                             | 2             |
+| 3     | 6                             | 6             |
+
+After this traversal:
+
+```
+answer = 1 1 2 6
+```
+
+Second traversal, moving right to left:
+
+| Index | Suffix before current element | Updated answer |
+| ----- | ----------------------------- | -------------- |
+| 3     | 1                             | 6              |
+| 2     | 4                             | 8              |
+| 1     | 12                            | 12             |
+| 0     | 24                            | 24             |
+
+Final result:
+
+```
+24 12 8 6
+```
+
+Why is this useful?
+
+A naive solution calculates the product of all other elements separately for each index.
+
+That requires \\(O(n^2)\\) time.
+
+The prefix-suffix approach requires only two traversals:
+
+\\[ \boxed{O(n)} \\]
+
+The output array takes \\(O(n)\\) space. The algorithm uses \\(O(1)\\) auxiliary space beyond that output array.
+
+This implementation assumes the products fit within `long long`.
+
+### Hinglish explanation
+
+Prefix ka matlab beginning se current index tak ki information.
+
+Suffix ka matlab current index se end tak ki information.
+
+Product Except Self problem mein har position par uske left aur right elements ka product chahiye.
+
+Isliye hum:
+
+- Left side ka product maintain karte hain.
+- Right side ka product maintain karte hain.
+- Dono ko multiply karte hain.
+
+Do traversals mein answer mil jata hai.
+
+### What → So What → Now What
+
+WHAT?
+
+Prefix and suffix precomputation store information from opposite directions of an array.
+
+SO WHAT?
+
+Precomputed information allows each position to be processed efficiently without repeatedly scanning its left and right sides.
+
+NOW WHAT?
+
+Practise recognising problems where each position depends on both sides, and decide whether storing prefix and suffix information is worthwhile.
+
+### Smart Notes
+
+- Prefix: beginning through current index.
+- Suffix: current index through the end.
+- Prefix and suffix arrays can store sums, products, minimums or maximums.
+- Precomputation reduces repeated work.
+- Product Except Self can be solved in \\(O(n)\\) time.
+- Output space and auxiliary space should be distinguished carefully.
+
+### DSA connection
+
+Long-term value
+
+Prefix/suffix precomputation appears in range queries, product problems, rainwater trapping, array transformations and many interview problems.
+
+## Chunk 6: Two Pointers and Sliding Windows
+
+
+
+DSA foundation
+
+High priority
+
+
+
+### Learning prompt
+
+Explain the two-pointer and sliding-window techniques, how they reduce unnecessary comparisons or repeated calculations, and the conditions under which they work. Distinguish between pointers moving from opposite ends and pointers defining a continuous window. Demonstrate both approaches through new problems, explain their invariants and analyse their complexity.
+
+### Model answer
+
+What is the two-pointer technique?
+
+The two-pointer technique uses two indices to track positions in an array.
+
+The pointers can move in different ways depending on the problem.
+
+A common arrangement is:
+
+```
+int left = 0;
+int right = n - 1;
+```
+
+One pointer begins at the start and the other at the end.
+
+They move towards one another according to a decision rule.
+
+This is useful when the array's properties allow us to eliminate unnecessary candidates.
+
+Example: Check whether a sorted array contains a pair with a given difference
+
+Suppose:
+
+```
+1 3 5 8 10
+```
+
+Target difference:
+
+```
+7
+```
+
+We want two distinct elements such that:
+
+\\[ arr[right]-arr[left]=7 \\]
+
+A pair exists:
+
+```
+3 and 10
+```
+
+Complete solution
+
+```
+#include <iostream>
+#include <cstdlib>
+using namespace std;
+
+bool hasDifference(int arr[], int n, int target) {
+    int left = 0;
+    int right = 1;
+
+    while (left < n && right < n) {
+
+        if (left == right) {
+            right++;
+            continue;
+        }
+
+        int difference = arr[right] - arr[left];
+
+        if (difference == target) {
+            return true;
+        }
+        else if (difference < target) {
+            right++;
+        }
+        else {
+            left++;
+        }
+    }
+
+    return false;
+}
+
+int main() {
+    int arr[5] = {1, 3, 5, 8, 10};
+
+    cout << hasDifference(arr, 5, 7);
+
+    return 0;
+}
+```
+
+Output:
+
+```
+1
+```
+
+This assumes the array is sorted in ascending order and the target difference is non-negative.
+
+Why does it work?
+
+Because the array is sorted:
+
+- Increasing `right` increases or maintains the difference.
+- Increasing `left` decreases or maintains the difference.
+
+The sorted property allows us to make informed movements.
+
+Time complexity:
+
+\\[ O(n) \\]
+
+Auxiliary space:
+
+\\[ O(1) \\]
+
+What is a sliding window?
+
+A sliding window is a contiguous range that moves through an array.
+
+It uses two indices to represent the current window:
+
+```
+left
+right
+```
+
+The window includes:
+
+\\[ [left,right] \\]
+
+When the window moves, we update its contents instead of recalculating everything.
+
+Example: Minimum-length subarray with sum at least a target
+
+Given an array of positive integers, find the minimum length of a contiguous subarray whose sum is at least a target.
+
+Example:
+
+```
+Array: 2 3 1 2 4 3
+Target: 7
+```
+
+The shortest valid subarray is:
+
+```
+4 3
+```
+
+Length:
+
+```
+2
+```
+
+Complete solution
+
+```
+#include <iostream>
+#include <climits>
+using namespace std;
+
+int minSubarrayLength(int arr[], int n, int target) {
+    int left = 0;
+    int sum = 0;
+
+    int minLength = INT_MAX;
+
+    for (int right = 0; right < n; right++) {
+
+        sum += arr[right];
+
+        while (sum >= target) {
+            int length = right - left + 1;
+
+            if (length < minLength) {
+                minLength = length;
+            }
+
+            sum -= arr[left];
+            left++;
+        }
+    }
+
+    if (minLength == INT_MAX) {
+        return 0;
+    }
+
+    return minLength;
+}
+
+int main() {
+    int arr[6] = {2, 3, 1, 2, 4, 3};
+
+    cout << minSubarrayLength(arr, 6, 7);
+
+    return 0;
+}
+```
+
+Output:
+
+```
+2
+```
+
+Why does this work?
+
+All elements are positive.
+
+When the sum is too small, moving `right` forward increases the window sum.
+
+When the sum becomes large enough, we try moving `left` forward to shrink the window while preserving validity.
+
+Because each pointer moves only forward, every element enters and leaves the window at most once.
+
+Time complexity:
+
+\\[ O(n) \\]
+
+Auxiliary space:
+
+\\[ O(1) \\]
+
+An important limitation
+
+This particular sliding-window strategy relies on positive elements.
+
+With negative numbers, increasing the window may decrease its sum, and removing an element may increase it. The decision rule is no longer guaranteed to work.
+
+This is why understanding the assumptions behind an algorithm is essential.
+
+### Hinglish explanation
+
+Two pointers mein hum array ke do positions ko simultaneously track karte hain.
+
+Sorted array mein pointers ko intelligently move karke unnecessary comparisons avoid kar sakte hain.
+
+Sliding window mein hum ek continuous range maintain karte hain.
+
+- `right` window ko expand karta hai.
+- `left` window ko shrink karta hai.
+
+Agar array mein positive numbers hain, toh sum badhane ke liye right move karte hain aur sum ko reduce karne ke liye left move karte hain.
+
+Har pointer maximum `n` times move karta hai, isliye total time complexity `O(n)` hoti hai.
+
+### What → So What → Now What
+
+WHAT?
+
+Two pointers track two positions, while a sliding window maintains a continuous range that expands or shrinks.
+
+SO WHAT?
+
+These techniques can replace nested loops with linear traversals when the problem's structure allows safe pointer movements.
+
+NOW WHAT?
+
+Practise identifying sorted-input assumptions, window invariants, valid pointer movements and the conditions that make a linear solution possible.
+
+### Smart Notes
+
+- Two pointers use two indices to make coordinated decisions.
+- Opposite-direction pointers often exploit sorted order or boundary information.
+- Sliding windows represent continuous ranges.
+- Expanding a window adds elements.
+- Shrinking a window removes elements.
+- Each pointer often moves at most \\(n\\) times.
+- Sliding-window correctness depends on the problem's constraints.
+- Positive-number sliding windows cannot automatically be applied to arrays containing arbitrary negative values.
+
+### DSA connection
+
+DSA foundation
+
+Two pointers and sliding windows are among the most frequently reused array patterns. They also appear in strings, linked lists, interval problems and computational geometry.
+
+# Part III: Developer's Code Reading Lab
+
+Long-term value
+
+This module contains several patterns that you will repeatedly encounter in unfamiliar code.
+
+Our consistent method:
+
+## Universal Code Reading Protocol
+
+1
+
+Syntax: What does the statement literally do?
+
+2
+
+Intent: What is the programmer trying to accomplish?
+
+3
+
+State: What changes after execution?
+
+## Code-reading cheat sheet
+
+### Running state
+
+| Code                               | Canonical reading                                               |
+| ---------------------------------- | --------------------------------------------------------------- |
+| `sum += arr[i]`                    | Add the current element to the running sum.                     |
+| `sum -= arr[i]`                    | Remove the current element's contribution from the running sum. |
+| `maxSum = max(maxSum, sum)`        | Keep the larger of the current maximum and the new sum.         |
+| `minValue = min(minValue, arr[i])` | Update the minimum value encountered so far.                    |
+| `prefix[i] = prefix[i-1] + arr[i]` | Extend the previous cumulative sum by the current element.      |
+
+### Range and window expressions
+
+| Code              | Canonical reading                                     |
+| ----------------- | ----------------------------------------------------- |
+| `end - start + 1` | Calculate the length of the inclusive range.          |
+| `left <= right`   | Check whether the current range is non-empty.         |
+| `right++`         | Expand or advance the right boundary by one position. |
+| `left++`          | Move the left boundary forward by one position.       |
+| `right--`         | Move the right boundary backward by one position.     |
+
+### Precomputation
+
+| Code                      | Canonical reading                                                                         |
+| ------------------------- | ----------------------------------------------------------------------------------------- |
+| `leftMax[i-1]`            | Maximum encountered before the current position from the left.                            |
+| `rightMax[i+1]`           | Maximum encountered after the current position from the right.                            |
+| `prefix[r] - prefix[l-1]` | Subtract the cumulative total before the range from the cumulative total through its end. |
+| `answer[i] *= suffix`     | Multiply the current result by the accumulated contribution from the right.               |
+
+## Practical code-reading demonstrations
+
+### Example 1: Prefix sum
+
+```
+prefix[i] = prefix[i - 1] + arr[i];
+```
+
+Syntax: Assign the sum of the previous prefix value and the current array element to `prefix[i]`.
+
+Intent: Extend the cumulative total by one element.
+
+State: The prefix array now stores the sum from index zero through index `i`.
+
+### Example 2: Sliding window
+
+```
+while (sum >= target) {
+    minLength = min(minLength, right - left + 1);
+
+    sum -= arr[left];
+    left++;
+}
+```
+
+Experienced-developer narration:
+
+While the current window satisfies the target condition, calculate its length and update the best answer. Then remove the leftmost element and advance the left boundary to investigate a shorter window.
+
+State: The window shrinks, and `sum` continues to represent the total of its remaining elements.
+
+### Example 3: Historical minimum
+
+```
+bestDifference = max(bestDifference, arr[i] - minValue);
+
+minValue = min(minValue, arr[i]);
+```
+
+Experienced-developer narration:
+
+First evaluate the best difference using the minimum value encountered before the current element. Then update the historical minimum to include the current element for future comparisons.
+
+State: The best difference is updated without violating the ordering requirement.
+
+### Example 4: Prefix and suffix products
+
+```
+answer[i] *= suffix;
+suffix *= arr[i];
+```
+
+Experienced-developer narration:
+
+Multiply the current result by the accumulated product of elements to its right. Then extend the suffix product by including the current element for the next iteration.
+
+State: The answer receives its right-side contribution, and the suffix accumulator advances one position to the left.
+
+## Code-reading mastery checklist
+
+- I can interpret running-state updates naturally.
+- I can explain the difference between local and global state.
+- I can explain prefix and suffix arrays.
+- I can identify the current window boundaries.
+- I can explain why a pointer moves in a particular direction.
+- I can explain why an update occurs before or after another update.
+- I can identify an algorithm's invariant.
+- I can narrate unfamiliar array code using Syntax → Intent → State.
+
+# Part IV: Programming Problems
+
+These are deliberately different from the problems already taught in your Sigma lectures.
+
+The purpose is to extend your understanding through new applications rather than repeat the same maximum-subarray, stock-profit or rainwater implementations.
+
+## Beginner: Fully worked problems
+
+### Problem 1: Find the sum of elements at even indices
+
+Task: Calculate the sum of array elements whose indices are even.
+
+Example:
+
+```
+Array: 10 20 30 40 50 60
+```
+
+Even indices are `0`, `2` and `4`.
+
+Expected output:
+
+```
+90
+```
+
+Complete solution
+
+```
+#include <iostream>
+using namespace std;
+
+int evenIndexSum(int arr[], int n) {
+    int sum = 0;
+
+    for (int i = 0; i < n; i += 2) {
+        sum += arr[i];
+    }
+
+    return sum;
+}
+
+int main() {
+    int arr[6] = {10, 20, 30, 40, 50, 60};
+
+    cout << evenIndexSum(arr, 6);
+
+    return 0;
+}
+```
+
+Explanation: Start at index zero and advance by two positions each time.
+
+Complexity: \\(O(n)\\) time and \\(O(1)\\) auxiliary space.
+
+### Problem 2: Calculate the sum of a specified range
+
+Task: Given an array and two indices `l` and `r`, calculate the sum of all elements in the inclusive range.
+
+Complete solution
+
+```
+#include <iostream>
+using namespace std;
+
+int rangeSum(int arr[], int l, int r) {
+    int sum = 0;
+
+    for (int i = l; i <= r; i++) {
+        sum += arr[i];
+    }
+
+    return sum;
+}
+
+int main() {
+    int arr[5] = {3, 5, 2, 7, 4};
+
+    cout << rangeSum(arr, 1, 3);
+
+    return 0;
+}
+```
+
+Output:
+
+```
+14
+```
+
+Explanation: Visit every index from `l` through `r`, inclusive.
+
+Complexity: \\(O(r-l+1)\\) time and \\(O(1)\\) auxiliary space.
+
+### Problem 3: Find the first repeating element
+
+Task: Find the first element, according to array order, that appears more than once.
+
+Example:
+
+```
+Array: 10 5 3 4 3 5 6
+```
+
+The answer is `5`, because its first occurrence appears before the first occurrence of the other repeating value `3`.
+
+Complete solution
+
+```
+#include <iostream>
+using namespace std;
+
+int firstRepeating(int arr[], int n) {
+    for (int i = 0; i < n; i++) {
+
+        for (int j = i + 1; j < n; j++) {
+            if (arr[i] == arr[j]) {
+                return arr[i];
+            }
+        }
+    }
+
+    return -1;
+}
+
+int main() {
+    int arr[7] = {10, 5, 3, 4, 3, 5, 6};
+
+    cout << firstRepeating(arr, 7);
+
+    return 0;
+}
+```
+
+Output:
+
+```
+5
+```
+
+Explanation: Visit elements in original order and check whether each appears again later.
+
+Complexity: \\(O(n^2)\\) time and \\(O(1)\\) auxiliary space.
+
+This solution returns the earliest element by first occurrence, not the earliest repeated second occurrence.
+
+## Intermediate: Guided problems with complete solutions
+
+### Problem 4: Answer multiple range-sum queries using prefix sums
+
+Task: Given an array and several range queries, answer each query efficiently.
+
+Example:
+
+```
+Array: 2 4 1 5 3
+
+Queries:
+0 2
+1 3
+2 4
+```
+
+Expected output:
+
+```
+7
+10
+9
+```
+
+Guided reasoning
+
+- Build a prefix sum array once.
+- For each query, subtract the prefix before its left boundary.
+- Handle the case where the range begins at zero.
+
+Complete solution
+
+```
+#include <iostream>
+#include <vector>
+using namespace std;
+
+int main() {
+    int arr[5] = {2, 4, 1, 5, 3};
+
+    int n = 5;
+
+    vector<int> prefix(n);
+
+    prefix[0] = arr[0];
+
+    for (int i = 1; i < n; i++) {
+        prefix[i] = prefix[i - 1] + arr[i];
+    }
+
+    int queries[3][2] = {
+        {0, 2},
+        {1, 3},
+        {2, 4}
+    };
+
+    for (int i = 0; i < 3; i++) {
+        int l = queries[i][0];
+        int r = queries[i][1];
+
+        int sum = prefix[r];
+
+        if (l > 0) {
+            sum -= prefix[l - 1];
+        }
+
+        cout << sum << endl;
+    }
+
+    return 0;
+}
+```
+
+Complexity: \\(O(n+q)\\) time for `q` queries and \\(O(n)\\) auxiliary space.
+
+### Problem 5: Find equilibrium indices
+
+Task: Find indices where the sum of all elements to the left equals the sum of all elements to the right. The current element is excluded from both sides.
+
+Example:
+
+```
+Array: 1 3 5 2 2
+```
+
+At index `2`:
+
+```
+Left sum  = 1 + 3 = 4
+Right sum = 2 + 2 = 4
+```
+
+Expected output:
+
+```
+2
+```
+
+Complete solution
+
+```
+#include <iostream>
+using namespace std;
+
+void equilibriumIndices(int arr[], int n) {
+    int totalSum = 0;
+
+    for (int i = 0; i < n; i++) {
+        totalSum += arr[i];
+    }
+
+    int leftSum = 0;
+
+    for (int i = 0; i < n; i++) {
+
+        int rightSum = totalSum - leftSum - arr[i];
+
+        if (leftSum == rightSum) {
+            cout << i << " ";
+        }
+
+        leftSum += arr[i];
+    }
+}
+
+int main() {
+    int arr[5] = {1, 3, 5, 2, 2};
+
+    equilibriumIndices(arr, 5);
+
+    return 0;
+}
+```
+
+Output:
+
+```
+2
+```
+
+Explanation: The right sum is calculated by subtracting the left sum and current element from the total sum.
+
+Complexity: \\(O(n)\\) time and \\(O(1)\\) auxiliary space.
+
+### Problem 6: Find the product of array elements except self
+
+Task: For each index, calculate the product of every other element without using division.
+
+Example:
+
+```
+Input:  1 2 3 4
+Output: 24 12 8 6
+```
+
+Complete solution
+
+```
+#include <iostream>
+#include <vector>
+using namespace std;
+
+vector<long long> productExceptSelf(vector<int>& arr) {
+    int n = arr.size();
+
+    vector<long long> answer(n, 1);
+
+    long long prefix = 1;
+
+    for (int i = 0; i < n; i++) {
+        answer[i] = prefix;
+        prefix *= arr[i];
+    }
+
+    long long suffix = 1;
+
+    for (int i = n - 1; i >= 0; i--) {
+        answer[i] *= suffix;
+        suffix *= arr[i];
+    }
+
+    return answer;
+}
+
+int main() {
+    vector<int> arr = {1, 2, 3, 4};
+
+    vector<long long> result = productExceptSelf(arr);
+
+    for (long long x : result) {
+        cout << x << " ";
+    }
+
+    return 0;
+}
+```
+
+Output:
+
+```
+24 12 8 6
+```
+
+Explanation: Each answer receives the product of elements before it and the product of elements after it.
+
+Complexity: \\(O(n)\\) time and \\(O(1)\\) auxiliary space beyond the required output array.
+
+### Problem 7: Find the minimum-length subarray with a target sum
+
+Task: Given positive integers, find the shortest contiguous subarray whose sum is at least the target.
+
+Example:
+
+```
+Array: 2 3 1 2 4 3
+Target: 7
+```
+
+Expected output:
+
+```
+2
+```
+
+Complete solution
+
+```
+#include <iostream>
+#include <climits>
+using namespace std;
+
+int minimumLength(int arr[], int n, int target) {
+    int left = 0;
+    int sum = 0;
+    int answer = INT_MAX;
+
+    for (int right = 0; right < n; right++) {
+        sum += arr[right];
+
+        while (sum >= target) {
+            answer = min(answer, right - left + 1);
+
+            sum -= arr[left];
+            left++;
+        }
+    }
+
+    return answer == INT_MAX ? 0 : answer;
+}
+
+int main() {
+    int arr[6] = {2, 3, 1, 2, 4, 3};
+
+    cout << minimumLength(arr, 6, 7);
+
+    return 0;
+}
+```
+
+Complexity: \\(O(n)\\) time and \\(O(1)\\) auxiliary space.
+
+## Advanced: Independent challenges with complete solutions
+
+### Problem 8: Find the longest consecutive sequence
+
+Task: Given an unsorted array, find the length of the longest sequence of consecutive integers. The numbers need not appear next to one another in the original array.
+
+Example:
+
+```
+Input: 100 4 200 1 3 2
+Output: 4
+```
+
+The longest consecutive sequence is:
+
+```
+1 2 3 4
+```
+
+Complete solution
+
+```
+#include <iostream>
+#include <unordered_set>
+#include <algorithm>
+using namespace std;
+
+int longestConsecutive(int arr[], int n) {
+    unordered_set<int> values;
+
+    for (int i = 0; i < n; i++) {
+        values.insert(arr[i]);
+    }
+
+    int best = 0;
+
+    for (int x : values) {
+
+        if (x != INT_MIN && values.find(x - 1) != values.end()) {
+            continue;
+        }
+
+        int current = x;
+        int length = 1;
+
+        while (current != INT_MAX && values.find(current + 1) != values.end()) {
+            current++;
+            length++;
+        }
+
+        best = max(best, length);
+    }
+
+    return best;
+}
+
+int main() {
+    int arr[6] = {100, 4, 200, 1, 3, 2};
+
+    cout << longestConsecutive(arr, 6);
+
+    return 0;
+}
+```
+
+Output:
+
+```
+4
+```
+
+Explanation: A number begins a consecutive sequence only when its predecessor is absent. We then count forward.
+
+Complexity: \\(O(n)\\) expected time and \\(O(n)\\) auxiliary space, assuming expected constant-time hash-set operations.
+
+### Problem 9: Find the majority element
+
+Task: Find the element that occurs more than `n/2` times, if one exists.
+
+Example:
+
+```
+Input: 2 2 1 1 1 2 2
+Output: 2
+```
+
+Complete solution
+
+```
+#include <iostream>
+using namespace std;
+
+int majorityElement(int arr[], int n) {
+    int candidate = 0;
+    int count = 0;
+
+    for (int i = 0; i < n; i++) {
+
+        if (count == 0) {
+            candidate = arr[i];
+        }
+
+        if (arr[i] == candidate) {
+            count++;
+        }
+        else {
+            count--;
+        }
+    }
+
+    count = 0;
+
+    for (int i = 0; i < n; i++) {
+        if (arr[i] == candidate) {
+            count++;
+        }
+    }
+
+    if (count > n / 2) {
+        return candidate;
+    }
+
+    return -1;
+}
+
+int main() {
+    int arr[7] = {2, 2, 1, 1, 1, 2, 2};
+
+    cout << majorityElement(arr, 7);
+
+    return 0;
+}
+```
+
+Output:
+
+```
+2
+```
+
+Explanation: Boyer-Moore Voting Algorithm cancels different elements against one another. If a majority element exists, it remains as the candidate. A second pass verifies the candidate.
+
+Complexity: \\(O(n)\\) time and \\(O(1)\\) auxiliary space.
+
+Assumption: `-1` is used as a failure sentinel, so a production-quality general implementation should use a separate success indicator if `-1` can be a valid array value.
+
+### Problem 10: Find the maximum sum of a circular sequence of fixed length
+
+Task: Given a circular array and an integer `k`, find the maximum sum of any `k` consecutive elements. The sequence may wrap around the end of the array.
+
+Example:
+
+```
+Array: 5 1 3 7
+k = 2
+```
+
+Possible circular pairs:
+
+```
+5 + 1 = 6
+1 + 3 = 4
+3 + 7 = 10
+7 + 5 = 12
+```
+
+Expected output:
+
+```
+12
+```
+
+Complete solution
+
+```
+#include <iostream>
+using namespace std;
+
+int maxCircularWindow(int arr[], int n, int k) {
+    if (k <= 0 || k > n) {
+        return 0;
+    }
+
+    int sum = 0;
+
+    for (int i = 0; i < k; i++) {
+        sum += arr[i];
+    }
+
+    int best = sum;
+
+    for (int i = k; i < n + k - 1; i++) {
+        sum -= arr[(i - k) % n];
+        sum += arr[i % n];
+
+        best = max(best, sum);
+    }
+
+    return best;
+}
+
+int main() {
+    int arr[4] = {5, 1, 3, 7};
+
+    cout << maxCircularWindow(arr, 4, 2);
+
+    return 0;
+}
+```
+
+Output:
+
+```
+12
+```
+
+Explanation: We initially calculate the first window. Then we slide it through the circular array, using modulo to wrap indices around.
+
+Complexity: \\(O(n)\\) time and \\(O(1)\\) auxiliary space.
+
+# Part V: DSA Mastery Lab
+
+Algorithmic reasoning
+
+These challenges are designed to develop transferable reasoning, rather than test whether you remember a particular implementation.
+
+## Challenge 1: Prove the prefix-sum range formula
+
+Question: Why does this expression calculate the sum of an inclusive range?
+
+\\[ sum(l,r)=prefix[r]-prefix[l-1] \\]
+
+Complete answer
+
+Let:
+
+\\[ prefix[r]=arr[0]+\cdots+arr[r] \\]
+
+and:
+
+\\[ prefix[l-1]=arr[0]+\cdots+arr[l-1] \\]
+
+Subtracting cancels the common elements:
+
+\\[ prefix[r]-prefix[l-1] \\]
+
+leaving:
+
+\\[ arr[l]+\cdots+arr[r] \\]
+
+Therefore, the formula returns the desired range sum.
+
+For `l = 0`, there is no preceding prefix, so the answer is simply `prefix[r]`.
+
+## Challenge 2: Why can't every sliding-window problem use the same approach?
+
+Question: Explain why a variable-size sliding window that relies on increasing and decreasing the sum works for positive arrays but can fail when negative values are present.
+
+Complete answer
+
+With positive elements:
+
+- Extending the right boundary cannot decrease the sum.
+- Moving the left boundary forward cannot increase the sum.
+
+This monotonic behaviour allows us to make safe decisions.
+
+With negative elements, these properties disappear.
+
+For example:
+
+```
+Array: 5 -10 8
+Target: 7
+```
+
+Removing a negative element can increase the window sum. Therefore, the usual rule for shrinking a window no longer guarantees that we are exploring the correct candidate ranges.
+
+The lesson is that an optimisation must be justified by the input constraints.
+
+## Challenge 3: Identify the invariant
+
+Question: What does this variable represent?
+
+```
+int minValue = arr[0];
+
+for (int i = 1; i < n; i++) {
+    minValue = min(minValue, arr[i]);
+}
+```
+
+Complete answer
+
+After processing index `i`, `minValue` contains the smallest element in the prefix from index `0` through `i`.
+
+This is the loop invariant.
+
+It allows later algorithm steps to use historical information without scanning the earlier elements again.
+
+## Challenge 4: Choose an appropriate technique
+
+Question: Select a suitable technique for each situation and explain why.
+
+| Problem                                                          | Suitable technique     | Reason                                     |
+| ---------------------------------------------------------------- | ---------------------- | ------------------------------------------ |
+| Many range-sum queries                                           | Prefix sums            | Precompute cumulative totals               |
+| Minimum window length with positive elements and a sum threshold | Sliding window         | Expand and shrink a valid continuous range |
+| Find a pair in a sorted array                                    | Two pointers           | Sorted order enables safe elimination      |
+| Calculate products excluding each index                          | Prefix/suffix products | Reuse contributions from both sides        |
+| Track the smallest earlier value                                 | Historical minimum     | Avoid rescanning previous elements         |
+
+Complete answer: The techniques above are appropriate under their stated conditions. The crucial skill is not memorising the technique's name, but identifying which property of the input makes it valid.
+
+# Part VI: Module Checkpoints
+
+Every question includes its answer.
+
+## Checkpoint A: Subarrays and ranges
+
+Q1. What is the length of an inclusive range from index 3 to index 8?
+
+Answer:
+
+\\[ 8-3+1=6 \\]
+
+Q2. How many non-empty subarrays exist in an array of size 10?
+
+Answer:
+
+\\[ \frac{10(11)}{2}=55 \\]
+
+Q3. Why is `[1, 3]` a subsequence but not a subarray of `[1, 2, 3]`?
+
+Answer: It preserves relative order but skips an element, so it isn't contiguous.
+
+## Checkpoint B: Running state and prefix sums
+
+Q1. What does a running sum represent?
+
+Answer: The cumulative total of the elements processed so far.
+
+Q2. What is the prefix array for `[2, 4, 1, 5]`?
+
+Answer:
+
+```
+2 6 7 12
+```
+
+Q3. Calculate the sum from index 1 through index 3.
+
+Answer:
+
+\\[ 12-2=10 \\]
+
+Q4. What is the complexity of answering a prefix-sum range query?
+
+Answer: \\(O(1)\\), after preprocessing.
+
+## Checkpoint C: State design
+
+Q1. What is an invariant?
+
+Answer: A condition that remains true throughout the execution of an algorithm.
+
+Q2. Why is local state different from global state?
+
+Answer: Local state describes a result associated with the current position or subproblem. Global state stores the best result found across the processed input.
+
+Q3. What does a recurrence describe?
+
+Answer: How a current result is calculated from earlier results.
+
+## Checkpoint D: Historical tracking
+
+Q1. What does a prefix minimum store?
+
+Answer: The smallest value encountered from the beginning through the current position.
+
+Q2. Why does update order matter in maximum-difference problems?
+
+Answer: Because the current element may not be allowed to act as its own earlier comparison value.
+
+## Checkpoint E: Prefix/suffix and windows
+
+Q1. What is a suffix?
+
+Answer: A continuous range extending from a given index through the final element.
+
+Q2. Why are prefix and suffix products useful?
+
+Answer: They allow each position to receive the contributions from the elements on either side without repeatedly multiplying the entire array.
+
+Q3. What is the difference between two pointers and sliding windows?
+
+Answer: Two pointers are a general technique for coordinating two indices. A sliding window specifically maintains a continuous range that expands or shrinks.
+
+Q4. Why can a positive-number sliding-window solution fail with negative values?
+
+Answer: Because expanding and shrinking the window no longer changes the sum in a predictable direction.
+
+# Part VII: Revision and Active Recall
+
+## Smart Revision Sheet
+
+Quick revision
+
+| Concept                | Essential idea                                    |
+| ---------------------- | ------------------------------------------------- |
+| Subarray               | Contiguous, non-empty range                       |
+| Subsequence            | Ordered elements, skipping permitted              |
+| Range length           | `r - l + 1`                                       |
+| Subarray count         | \\(n(n+1)/2\\)                                    |
+| Running sum            | Maintain cumulative total                         |
+| Prefix sum             | Store cumulative sums                             |
+| Range query            | Subtract earlier prefix                           |
+| Algorithmic state      | Information maintained for decisions              |
+| Recurrence             | Relationship between current and previous results |
+| Invariant              | Condition that remains true                       |
+| Historical minimum     | Smallest previously encountered value             |
+| Prefix maximum         | Maximum from beginning through current index      |
+| Suffix maximum         | Maximum from current index through the end        |
+| Prefix/suffix products | Contributions from both sides                     |
+| Two pointers           | Coordinate two indices                            |
+| Sliding window         | Maintain a continuous range                       |
+| Time-space trade-off   | Exchange memory for faster computation            |
+
+### Complexity reference
+
+| Technique               | Typical time | Auxiliary space             |
+| ----------------------- | ------------ | --------------------------- |
+| Prefix-sum construction | \\(O(n)\\)   | \\(O(n)\\)                  |
+| Prefix-sum query        | \\(O(1)\\)   | \\(O(1)\\)                  |
+| Historical minimum      | \\(O(n)\\)   | \\(O(1)\\)                  |
+| Prefix/suffix products  | \\(O(n)\\)   | \\(O(n)\\) including output |
+| Two-pointer traversal   | \\(O(n)\\)   | \\(O(1)\\)                  |
+| Variable sliding window | \\(O(n)\\)   | \\(O(1)\\)                  |
+
+## Final Active Recall Test
+
+### Q1. What is the output?
+
+```
+int arr[5] = {2, 4, 6, 8, 10};
+
+int sum = 0;
+
+for (int i = 0; i < 5; i += 2) {
+    sum += arr[i];
+}
+
+cout << sum;
+```
+
+Answer: `18`, because it adds the values at indices 0, 2 and 4.
+
+### Q2. What is the prefix array?
+
+```
+Array: 3 2 5 1
+```
+
+Answer:
+
+```
+3 5 10 11
+```
+
+### Q3. What is the sum of indices 1 through 3 using the prefix array?
+
+Answer:
+
+\\[ 11-3=8 \\]
+
+### Q4. What does this condition mean?
+
+```
+right - left + 1 > k
+```
+
+Answer: Check whether the current inclusive window contains more than `k` elements.
+
+### Q5. Why is a historical minimum useful?
+
+Answer: It stores the best earlier candidate for calculations involving the current element, avoiding repeated scans.
+
+### Q6. What is the output?
+
+```
+int arr[4] = {4, 2, 8, 3};
+
+int left = 0;
+int right = 3;
+
+cout << arr[right] - arr[left];
+```
+
+Answer: `-1`.
+
+### Q7. What is the main advantage of prefix/suffix precomputation?
+
+Answer: It lets us use information from both sides of a position without repeatedly traversing those ranges.
+
+### Q8. How many times can a sliding-window pointer move in a standard one-directional traversal?
+
+Answer: At most `n` times per pointer.
+
+### Q9. What is the difference between output space and auxiliary space?
+
+Answer: Output space stores the required result. Auxiliary space is additional working memory beyond the input and required output.
+
+### Q10. Why should algorithm assumptions be stated explicitly?
+
+Answer: Because an optimisation may only be correct under particular input properties, such as sorted order or positive elements.
+
+# Part VIII: Module Reflection
+
+WHAT DID I LEARN?
+
+You learned how to reason about contiguous ranges, maintain cumulative and historical information, design algorithmic state, precompute information from both sides and use two pointers and sliding windows.
+
+SO WHAT DOES IT ENABLE?
+
+You can eliminate redundant calculations, answer repeated queries efficiently, recognise algorithmic invariants, make decisions using historical information and select optimisations based on input constraints.
+
+NOW WHAT CAN I DO?
+
+You can approach more advanced problems involving prefix sums, sliding windows, two pointers, greedy reasoning and dynamic programming with a stronger conceptual foundation.
+
+## Module Mastery Tracker
+
+Arrays Part II mastery
+
+# 0/14
+
+I understand subarrays and subsequences.
+
+I can calculate the number and length of ranges.
+
+I understand running sums and cumulative information.
+
+I can build and use prefix sums.
+
+I can answer range-sum queries.
+
+I understand algorithmic state and invariants.
+
+I can explain recurrence relations.
+
+I can maintain historical minimums and maximums.
+
+I understand prefix and suffix precomputation.
+
+I can solve product-except-self independently.
+
+I understand the two-pointer technique.
+
+I can identify when sliding windows are appropriate.
+
+I understand the assumptions behind optimisations.
+
+I can read unfamiliar code using Syntax → Intent → State.
+
+Mark a skill complete only when you can demonstrate it independently.
+
+## Final module audit
+
+# Major Topic 01: Arrays
+
+## Module 2: Subarrays and Array Optimisation
+
+Sigma lecture concepts
+
+Covered
+
+Duplicate lecture problems
+
+Avoided
+
+New complementary problems
+
+Included
+
+What → So What → Now What
+
+Integrated
+
+English and Hinglish
+
+Included
+
+Complete problem solutions
+
+Included
+
+Developer's Code Reading Protocol
+
+Included
+
+DSA Mastery Lab
+
+Included
+
+Active recall with answers
+
+Included
+
+## The idea I want you to carry forward
+
+There is a common thread connecting nearly everything in this module.
+
+- Prefix sums remember cumulative information.
+- Historical minimums remember the best previous candidate.
+- Kadane's Algorithm remembers the best subarray ending at the current position.
+- Prefix/suffix techniques remember information from both directions.
+- Sliding windows remember the contents and properties of a current range.
+
+The deeper lesson is learning what information an algorithm needs to remember, and what information it can safely discard.
+
+That is one of the central skills behind algorithm design.
+
+And that is precisely what we want to develop as you progress through DSA. 🚀
